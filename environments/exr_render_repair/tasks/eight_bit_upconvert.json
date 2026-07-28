@@ -3,5 +3,11 @@
   "application": "OpenEXR",
   "broken_file": "eight_bit_upconvert.exr",
   "symptom": "It is a 32-bit float EXR and it banks in the gradient.",
-  "min_levels": 512
+  "min_levels": 512,
+  "reference": "_reference_good.exr",
+  "may_change": [
+    "R",
+    "G",
+    "B"
+  ]
 }

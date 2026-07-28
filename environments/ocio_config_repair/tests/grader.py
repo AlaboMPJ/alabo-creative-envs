@@ -129,6 +129,13 @@ def check_structure(cfg, spec):
     data_cs = next((cs for cs in spaces if cs["name"] == data_target), None)
     if data_cs and not data_cs.get("isdata"):
         fail(f"role 'data' points at '{data_target}', which is not marked isdata")
+    # Pointing the data role at the working space satisfies the letter of the
+    # rule and destroys the pipeline: every render would be treated as data.
+    if data_target and data_target == roles.get("scene_linear"):
+        fail(f"role 'data' and role 'scene_linear' both point at '{data_target}'. "
+             "The data role must name a separate uncoloured space.")
+    if data_target and data_target in refs:
+        fail(f"role 'data' points at the reference space '{data_target}'")
 
     # 6. task-specific requirements
     for want in spec.get("required_colorspaces", []):

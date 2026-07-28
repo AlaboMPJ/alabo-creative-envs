@@ -94,9 +94,27 @@ def check_structure(g, spec):
                     upstream(s, seen)
         return seen
 
+    reachable = set()
     for s in sinks:
-        if len(upstream(s, set())) < 2:
+        u = upstream(s, set())
+        if len(u) < 2:
             fail(f"output node {s} has no upstream graph")
+        reachable |= u
+
+    # A decoy sink fed by a stub satisfies "has an output" while the real graph
+    # stays broken. So every required node type must sit upstream of some sink,
+    # and the required types must all reach the SAME sink, which is what makes
+    # it one working graph rather than two fragments.
+    req = spec.get("required_class_types", [])
+    if req:
+        for sink in sinks:
+            chain = upstream(sink, set())
+            types_in_chain = {g[n]["class_type"] for n in chain}
+            missing = [w for w in req if w not in types_in_chain]
+            if missing:
+                fail(f"output node {sink} does not have {missing} upstream. Every "
+                     "output must be fed by the real graph; bolting on a second "
+                     "save node fed by a stub is not a repair.")
 
     # 5. task-specific requirements, declared per instance
     for req in spec.get("required_class_types", []):

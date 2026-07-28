@@ -79,7 +79,8 @@ def depth_normalised(ch):
     downstream is wrong, and there is no error to read."""
     z = ch["Z"]
     ch["Z"] = ((z - z.min()) / (z.max() - z.min())).astype(np.float32)
-    return ch, "Defocus looks flat. Fog sits at the wrong distance. No error anywhere."
+    return ch, ("Defocus looks flat. Fog sits at the wrong distance. No error "
+                "anywhere. Camera near and far for this shot were 2.0 and 50.0.")
 
 
 def alpha_double_premult(ch):
@@ -115,12 +116,27 @@ def aov_naming(ch):
     return ch, "The comp template cannot find the passes and an artist rewires by hand."
 
 
+# `may_change` names the channels a correct repair is allowed to touch. Every
+# other channel must come back byte-for-byte, which is what stops an agent
+# satisfying the rule by replacing the data.
+REF = "_reference_good.exr"
 BREAKS = {
-    "depth_normalised":     (depth_normalised, {"require_scene_depth": True}),
-    "alpha_double_premult": (alpha_double_premult, {"require_unpremultiplied": True}),
-    "normals_not_unit":     (normals_not_unit, {"require_unit_normals": True}),
-    "eight_bit_upconvert":  (eight_bit_upconvert, {"min_levels": 512}),
-    "aov_naming":           (aov_naming, {"require_channels": ["Z", "N.X", "N.Y", "N.Z", "R", "G", "B", "A"]}),
+    # The camera range is stated so the repair is actually recoverable.
+    # Normalising destroys the original distances, so without this the task
+    # would be unsolvable and the grader would only be rewarding guesses.
+    "depth_normalised":     (depth_normalised, {"require_scene_depth": True,
+                                                "depth_range": [2.0, 50.0],
+                                                "reference": REF, "may_change": ["Z"]}),
+    "alpha_double_premult": (alpha_double_premult, {"require_unpremultiplied": True,
+                                                    "reference": REF,
+                                                    "may_change": ["R", "G", "B"]}),
+    "normals_not_unit":     (normals_not_unit, {"require_unit_normals": True,
+                                                "reference": REF,
+                                                "may_change": ["N.X", "N.Y", "N.Z"]}),
+    "eight_bit_upconvert":  (eight_bit_upconvert, {"min_levels": 512, "reference": REF,
+                                                   "may_change": ["R", "G", "B"]}),
+    "aov_naming":           (aov_naming, {"require_channels": ["Z", "N.X", "N.Y", "N.Z", "R", "G", "B", "A"],
+                                          "reference": REF, "may_change": []}),
 }
 
 

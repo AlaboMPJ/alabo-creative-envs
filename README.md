@@ -59,6 +59,26 @@ Each environment follows the now-conventional layout:
       tests/grader.py        # returns 1.0 or 0.0, and a reason
       tasks/*.json           # task instances
 
+## Adversarial testing
+
+    python3 tools/reward_hack.py --python-ocio <venv>/bin/python \
+                                 --python-exr  <venv>/bin/python
+
+Twelve attacks that try to score full reward while leaving the fault in place.
+The first run breached seven of them, and the pattern was consistent: the
+graders checked shape and not content, so an agent could satisfy every rule and
+destroy the data. A flat constant depth cleared a range check. Random normals
+renormalised to unit length cleared a length check. Adding noise at 1e-7 cleared
+a distinct-value count. A second save node fed by a stub cleared "has an output".
+
+All twelve now hold, and the exit code is the breach count so it can gate a
+release.
+
+One attack also exposed a flaw in the task design rather than the grader:
+normalising depth destroys the original range, so no agent could have recovered
+scene units. The task now states the camera near and far, which makes it
+solvable and the hack impossible.
+
 ## Reward design
 
 Binary, and deliberately strict. Partial credit teaches an agent that a graph

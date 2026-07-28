@@ -3,5 +3,11 @@
   "application": "OpenEXR",
   "broken_file": "alpha_double_premult.exr",
   "symptom": "Edges look dark and crunchy over the background. Nothing errors.",
-  "require_unpremultiplied": true
+  "require_unpremultiplied": true,
+  "reference": "_reference_good.exr",
+  "may_change": [
+    "R",
+    "G",
+    "B"
+  ]
 }

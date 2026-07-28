@@ -3,5 +3,11 @@
   "application": "OpenEXR",
   "broken_file": "normals_not_unit.exr",
   "symptom": "Relight looks wrong in a way nobody can name. Nothing errors.",
-  "require_unit_normals": true
+  "require_unit_normals": true,
+  "reference": "_reference_good.exr",
+  "may_change": [
+    "N.X",
+    "N.Y",
+    "N.Z"
+  ]
 }

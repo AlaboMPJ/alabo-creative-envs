@@ -12,5 +12,7 @@
     "G",
     "B",
     "A"
-  ]
+  ],
+  "reference": "_reference_good.exr",
+  "may_change": []
 }

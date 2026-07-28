@@ -12,7 +12,7 @@ these.
 
 Binary reward, with a reason either way.
 """
-import json, sys, argparse
+import json, os, sys, argparse
 import numpy as np
 
 try:
@@ -91,6 +91,15 @@ def main():
                  "Z must be in scene units; a 0-1 depth silently breaks defocus and fog.")
         if zmin < 0:
             fail(f"depth minimum is {zmin:.3f}; distance cannot be negative")
+        want = spec.get("depth_range")
+        if want:
+            # A rescaled normalised depth clears a naive "greater than 1" check
+            # while carrying none of the original distances. The task states the
+            # camera near and far, so the repair is recoverable and checkable.
+            if abs(zmin - want[0]) > 0.05 or abs(zmax - want[1]) > 0.05:
+                fail(f"depth spans {zmin:.3f} to {zmax:.3f}; the camera range for "
+                     f"this shot is {want[0]} to {want[1]}. Rescaling a normalised "
+                     "depth to clear 1.0 does not restore the distances.")
 
     # 3. alpha must not be baked into colour twice. Double premultiplication
     #    darkens every edge and there is no error to read.
@@ -139,6 +148,55 @@ def main():
                 fail(f"channel {c} holds only {levels} distinct values. "
                      "This is a float file carrying 8-bit information, which "
                      "banks in gradients and cannot be graded.")
+            # Counting distinct values is defeated by adding tiny noise, so also
+            # test whether the values sit on the 8-bit lattice. Genuine float
+            # data does not cluster at multiples of 1/255.
+            v = ch[c].ravel()
+            v = v[(v > 0.01) & (v < 0.99)]
+            if v.size > 64:
+                dist = np.abs(v * 255.0 - np.round(v * 255.0))
+                on_lattice = float((dist < 0.01).mean())
+                if on_lattice > 0.9:
+                    fail(f"channel {c}: {on_lattice*100:.0f}% of values sit on the "
+                         "8-bit lattice. Adding noise raises the distinct-value "
+                         "count without restoring any information.")
+
+    # Shape checks alone are gameable: an agent can satisfy every rule and
+    # destroy the data, by writing a flat constant depth, renormalising random
+    # normals, zeroing the passes, or dithering an 8-bit image past a
+    # distinct-value count. So compare against the reference for everything the
+    # repair was not supposed to change.
+    ref_path = spec.get("reference")
+    if ref_path:
+        ref_full = os.path.join(os.path.dirname(a.task), ref_path)
+        if os.path.exists(ref_full):
+            ref = read(ref_full)
+            changed = set(spec.get("may_change", []))
+            for name, arr in ref.items():
+                if name in changed:
+                    continue
+                got = ch.get(name)
+                if got is None:
+                    fail(f"channel '{name}' is missing from the repair")
+                if got.shape != arr.shape:
+                    fail(f"channel '{name}' changed shape")
+                if float(np.abs(got - arr).max()) > 1e-4:
+                    fail(f"channel '{name}' was altered. The repair should not "
+                         "change data unrelated to the fault; replacing a pass "
+                         "with new values is not a repair.")
+            # And for the channels that MAY change, the result must still carry
+            # the original signal rather than a constant or noise.
+            for name in changed:
+                if name in ref and name in ch:
+                    a_, b_ = ref[name].ravel(), ch[name].ravel()
+                    if float(b_.std()) < 1e-6:
+                        fail(f"channel '{name}' is constant, which carries no "
+                             "information regardless of its range")
+                    corr = float(np.corrcoef(a_, b_)[0, 1])
+                    if corr < 0.9:
+                        fail(f"channel '{name}' no longer tracks the original "
+                             f"(correlation {corr:.2f}). It was replaced rather "
+                             "than repaired.")
 
     ok(f"{len(ch)} channels; all craft checks passed")
 
