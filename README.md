@@ -24,12 +24,17 @@ statement about craft, expressed as code.
 |---|---|---|---|
 | `comfyui_graph_repair` | ComfyUI | repair a broken API-format workflow until it validates and executes | none |
 | `ocio_config_repair` | OpenColorIO | repair a colour config that loads, renders, and is wrong | none |
-| `nuke_script_repair` | Nuke | repair a broken .nk script until it renders the expected frame | Nuke (Non-commercial works) |
+
 
 `ocio_config_repair` grades the hardest and most valuable class: silent
 wrongness. Four of its five faults produce no error at all. The fifth,
 `inverted_direction`, passes every structural check and is only caught
 numerically, by encoding a value into a colourspace and decoding it back.
+
+Planned, not built: a Nuke script-repair environment. It needs a Nuke licence
+inside the container and a running instance to render the check frame, which is
+the licence gate that keeps this space empty and is exactly why it is worth
+building. It is not listed above until it exists.
 
 `comfyui_graph_repair` is first deliberately: ComfyUI is free, so anyone can run
 and reproduce it. The Nuke environment needs a licence in the container, which
