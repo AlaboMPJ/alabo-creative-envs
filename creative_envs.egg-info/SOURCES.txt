@@ -1,9 +1,0 @@
-README.md
-pyproject.toml
-creative_envs/__init__.py
-creative_envs/loader.py
-creative_envs.egg-info/PKG-INFO
-creative_envs.egg-info/SOURCES.txt
-creative_envs.egg-info/dependency_links.txt
-creative_envs.egg-info/requires.txt
-creative_envs.egg-info/top_level.txt
