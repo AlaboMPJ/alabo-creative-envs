@@ -1,0 +1,49 @@
+[environment]
+id = "ocio_config_repair"
+version = "0.1.0"
+application = "OpenColorIO"
+licence_required = false
+author = "Alabo"
+
+[reward]
+type = "binary"
+pass = 1.0
+fail = 0.0
+
+[grading]
+entrypoint = "tests/test.sh"
+grader = "tests/grader.py"
+# Two levels. Structural always runs. Numeric runs when PyOpenColorIO is
+# importable and is the only level that catches an inverted transform.
+levels = ["structural", "numeric"]
+
+[agent]
+reads = ["task_instance.json", "broken_config.ocio", "symptom.txt"]
+writes = ["submission.ocio"]
+max_turns = 25
+
+[[tasks]]
+id = "dangling_role"
+difficulty = "easy"
+skill = "follow a role to a colorspace that does not exist"
+
+[[tasks]]
+id = "missing_data_role"
+difficulty = "easy"
+skill = "know which roles a pipeline looks up by name"
+
+[[tasks]]
+id = "ambiguous_reference"
+difficulty = "medium"
+skill = "know that the reference space is the one with no transform, and that two is ambiguous rather than invalid"
+
+[[tasks]]
+id = "data_space_transformed"
+difficulty = "medium"
+skill = "know that a data space must never be colour managed, or depth and mattes are destroyed"
+
+[[tasks]]
+id = "inverted_direction"
+difficulty = "hard"
+skill = "catch a transform direction that validates, loads, renders, and is wrong"
+requires = "numeric level"

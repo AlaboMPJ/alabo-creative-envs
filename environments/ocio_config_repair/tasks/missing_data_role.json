@@ -1,0 +1,15 @@
+{
+  "id": "missing_data_role",
+  "application": "OpenColorIO",
+  "broken_config": "missing_data_role.ocio",
+  "symptom": "The comp renders. Depth passes look wrong after a colourspace conversion.",
+  "required_roles": {
+    "data": "Raw",
+    "scene_linear": "ACEScg"
+  },
+  "required_colorspaces": [
+    "ACEScg",
+    "Raw",
+    "sRGB - Texture"
+  ]
+}

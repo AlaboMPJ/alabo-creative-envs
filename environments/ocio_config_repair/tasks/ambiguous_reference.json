@@ -1,0 +1,12 @@
+{
+  "id": "ambiguous_reference",
+  "application": "OpenColorIO",
+  "broken_config": "ambiguous_reference.ocio",
+  "symptom": "No error. Conversions resolve inconsistently between applications.",
+  "required_roles": {
+    "scene_linear": "ACEScg"
+  },
+  "required_colorspaces": [
+    "ACEScg"
+  ]
+}

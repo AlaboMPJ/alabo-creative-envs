@@ -1,0 +1,12 @@
+{
+  "id": "data_space_transformed",
+  "application": "OpenColorIO",
+  "broken_config": "data_space_transformed.ocio",
+  "symptom": "No error. Normals and mattes come back subtly shifted.",
+  "required_roles": {
+    "data": "Raw"
+  },
+  "required_colorspaces": [
+    "Raw"
+  ]
+}

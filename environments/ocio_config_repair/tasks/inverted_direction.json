@@ -1,0 +1,21 @@
+{
+  "id": "inverted_direction",
+  "application": "OpenColorIO",
+  "broken_config": "inverted_direction.ocio",
+  "symptom": "No error. Textures read washed out and nobody can say why.",
+  "required_colorspaces": [
+    "sRGB - Texture",
+    "ACEScg"
+  ],
+  "round_trips": [
+    {
+      "colorspace": "sRGB - Texture",
+      "value": [
+        0.18,
+        0.18,
+        0.18
+      ],
+      "tolerance": 0.0001
+    }
+  ]
+}

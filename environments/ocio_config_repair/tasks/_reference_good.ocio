@@ -1,0 +1,72 @@
+ocio_profile_version: 2
+search_path: luts
+roles:
+  default: ACEScg
+  reference: ACEScg
+  scene_linear: ACEScg
+  color_picking: sRGB - Texture
+  data: Raw
+  matte_paint: sRGB - Texture
+  texture_paint: sRGB - Texture
+displays:
+  sRGB:
+  - '!<View>': null
+    name: Standard
+    colorspace: sRGB - Display
+active_displays:
+- sRGB
+active_views:
+- Standard
+colorspaces:
+- name: ACEScg
+  family: ACES
+  bitdepth: 32f
+  description: 'The working space. Reference: no transform.'
+  isdata: false
+  allocation: lg2
+  allocationvars:
+  - -8
+  - 5
+  - 0.00390625
+- name: Raw
+  family: Utility
+  bitdepth: 32f
+  description: Data. Never colour managed.
+  isdata: true
+  allocation: uniform
+- name: sRGB - Texture
+  family: Texture
+  bitdepth: 32f
+  isdata: false
+  allocation: uniform
+  to_reference:
+    '!<ExponentWithLinearTransform>': null
+    gamma:
+    - 2.4
+    - 2.4
+    - 2.4
+    - 1.0
+    offset:
+    - 0.055
+    - 0.055
+    - 0.055
+    - 0.0
+    direction: inverse
+- name: sRGB - Display
+  family: Display
+  bitdepth: 32f
+  isdata: false
+  allocation: uniform
+  from_reference:
+    '!<ExponentWithLinearTransform>': null
+    gamma:
+    - 2.4
+    - 2.4
+    - 2.4
+    - 1.0
+    offset:
+    - 0.055
+    - 0.055
+    - 0.055
+    - 0.0
+    direction: forward

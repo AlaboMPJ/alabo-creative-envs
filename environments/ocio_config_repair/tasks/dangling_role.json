@@ -1,0 +1,12 @@
+{
+  "id": "dangling_role",
+  "application": "OpenColorIO",
+  "broken_config": "dangling_role.ocio",
+  "symptom": "Colour picking fails in the DCC with an unhelpful message.",
+  "required_roles": {
+    "color_picking": "sRGB - Texture"
+  },
+  "required_colorspaces": [
+    "sRGB - Texture"
+  ]
+}
