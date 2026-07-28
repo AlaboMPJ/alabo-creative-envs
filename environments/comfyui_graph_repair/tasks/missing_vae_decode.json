@@ -1,0 +1,89 @@
+{
+  "id": "missing_vae_decode",
+  "application": "ComfyUI",
+  "broken_graph": {
+    "4": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "RealVisXL_V4.0.safetensors"
+      }
+    },
+    "5": {
+      "class_type": "EmptyLatentImage",
+      "inputs": {
+        "width": 832,
+        "height": 1216,
+        "batch_size": 1
+      }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "a portrait, studio light, 85mm",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "7": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "blurry, low quality",
+        "clip": [
+          "4",
+          1
+        ]
+      }
+    },
+    "3": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 42,
+        "steps": 30,
+        "cfg": 5.5,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "denoise": 1.0,
+        "model": [
+          "4",
+          0
+        ],
+        "positive": [
+          "6",
+          0
+        ],
+        "negative": [
+          "7",
+          0
+        ],
+        "latent_image": [
+          "5",
+          0
+        ]
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "repair",
+        "images": [
+          "3",
+          0
+        ]
+      }
+    }
+  },
+  "error": "Error occurred when executing SaveImage: expected IMAGE, got LATENT",
+  "required_class_types": [
+    "VAEDecode",
+    "SaveImage"
+  ],
+  "required_input_values": [
+    [
+      "3",
+      "steps",
+      30
+    ]
+  ]
+}

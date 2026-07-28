@@ -1,0 +1,50 @@
+[environment]
+id = "comfyui_graph_repair"
+version = "0.1.0"
+application = "ComfyUI"
+licence_required = false
+author = "Alabo"
+
+[reward]
+type = "binary"
+pass = 1.0
+fail = 0.0
+# Partial credit is deliberately refused. A graph either executes or it does not,
+# and rewarding "nearly runs" teaches the wrong thing.
+
+[grading]
+entrypoint = "tests/test.sh"
+grader = "tests/grader.py"
+# Structural grading always runs. Live execution runs only when COMFY_URL is set,
+# so the environment is useful on a machine with no GPU.
+live_execution = "optional"
+
+[agent]
+# The agent sees the broken graph and the error, and writes submission.json.
+reads = ["task_instance.json", "broken_graph.json", "error.txt"]
+writes = ["submission.json"]
+max_turns = 25
+
+[[tasks]]
+id = "sdxl_dangling_latent"
+file = "tasks/sdxl_dangling_latent.json"
+difficulty = "easy"
+skill = "trace a broken link back to its true source"
+
+[[tasks]]
+id = "missing_vae_decode"
+file = "tasks/missing_vae_decode.json"
+difficulty = "medium"
+skill = "know that a sampler emits LATENT and a save node needs IMAGE"
+
+[[tasks]]
+id = "feedback_cycle"
+file = "tasks/feedback_cycle.json"
+difficulty = "medium"
+skill = "recognise a cycle that deadlocks the executor rather than erroring"
+
+[[tasks]]
+id = "orphaned_conditioning"
+file = "tasks/orphaned_conditioning.json"
+difficulty = "hard"
+skill = "distinguish positive from negative conditioning when both are wired to the same encoder"
