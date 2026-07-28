@@ -1,0 +1,7 @@
+{
+  "id": "normals_not_unit",
+  "application": "OpenEXR",
+  "broken_file": "normals_not_unit.exr",
+  "symptom": "Relight looks wrong in a way nobody can name. Nothing errors.",
+  "require_unit_normals": true
+}

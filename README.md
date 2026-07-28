@@ -24,7 +24,14 @@ statement about craft, expressed as code.
 |---|---|---|---|
 | `comfyui_graph_repair` | ComfyUI | repair a broken API-format workflow until it validates and executes | none |
 | `ocio_config_repair` | OpenColorIO | repair a colour config that loads, renders, and is wrong | none |
+| `exr_render_repair` | OpenEXR | repair a render handoff that opens cleanly and is wrong | none |
 
+
+`exr_render_repair` grades the render-to-comp handoff, which is the widest
+silent-wrongness surface in a pipeline: depth normalised to 0-1 so every defocus
+is at the wrong distance, colour premultiplied twice so edges go dark, normals
+that are not unit length, AOVs renamed so a conform cannot find them, and a
+32-bit float file carrying only 8-bit information. None of them raise an error.
 
 `ocio_config_repair` grades the hardest and most valuable class: silent
 wrongness. Four of its five faults produce no error at all. The fifth,

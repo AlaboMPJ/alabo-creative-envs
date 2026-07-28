@@ -1,0 +1,7 @@
+{
+  "id": "eight_bit_upconvert",
+  "application": "OpenEXR",
+  "broken_file": "eight_bit_upconvert.exr",
+  "symptom": "It is a 32-bit float EXR and it banks in the gradient.",
+  "min_levels": 512
+}

@@ -1,0 +1,7 @@
+{
+  "id": "depth_normalised",
+  "application": "OpenEXR",
+  "broken_file": "depth_normalised.exr",
+  "symptom": "Defocus looks flat. Fog sits at the wrong distance. No error anywhere.",
+  "require_scene_depth": true
+}

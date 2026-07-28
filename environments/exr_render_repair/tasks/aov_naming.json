@@ -1,0 +1,16 @@
+{
+  "id": "aov_naming",
+  "application": "OpenEXR",
+  "broken_file": "aov_naming.exr",
+  "symptom": "The comp template cannot find the passes and an artist rewires by hand.",
+  "require_channels": [
+    "Z",
+    "N.X",
+    "N.Y",
+    "N.Z",
+    "R",
+    "G",
+    "B",
+    "A"
+  ]
+}

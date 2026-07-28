@@ -1,0 +1,7 @@
+{
+  "id": "alpha_double_premult",
+  "application": "OpenEXR",
+  "broken_file": "alpha_double_premult.exr",
+  "symptom": "Edges look dark and crunchy over the background. Nothing errors.",
+  "require_unpremultiplied": true
+}
