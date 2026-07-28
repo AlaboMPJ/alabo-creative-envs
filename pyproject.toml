@@ -1,0 +1,26 @@
+[project]
+name = "creative-envs"
+version = "0.1.0"
+description = "Verifiable RL environments for professional creative software: ComfyUI, OpenColorIO, OpenEXR"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Alabo" }]
+keywords = ["rl-environment", "verifiers", "vfx", "compositing", "comfyui", "opencolorio", "openexr"]
+dependencies = ["verifiers>=0.2.0", "datasets"]
+
+[project.optional-dependencies]
+# Per-environment grader deps. Kept optional so a missing one cannot make the
+# whole package unloadable, which is why the graders run as subprocesses.
+ocio = ["pyyaml", "opencolorio"]
+exr = ["numpy", "openexr"]
+all = ["pyyaml", "opencolorio", "numpy", "openexr"]
+
+[project.urls]
+Homepage = "https://github.com/AlaboMPJ/alabo-creative-envs"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["creative_envs"]

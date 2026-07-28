@@ -1,0 +1,16 @@
+verifiers>=0.2.0
+datasets
+
+[all]
+pyyaml
+opencolorio
+numpy
+openexr
+
+[exr]
+numpy
+openexr
+
+[ocio]
+pyyaml
+opencolorio

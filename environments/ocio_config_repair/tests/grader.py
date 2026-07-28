@@ -147,6 +147,16 @@ def check_numeric(path, spec):
     try:
         import PyOpenColorIO as OCIO
     except ImportError:
+        if spec.get("round_trips"):
+            # This task cannot be graded without the numeric level, and its
+            # fault is invisible structurally. Silently returning a pass would
+            # reward a broken config in a training run, which is the worst
+            # outcome available. Refuse instead.
+            print(json.dumps({"reward": 0.0, "reason":
+                "environment error: this task requires PyOpenColorIO for numeric "
+                "grading and it is not installed. Refusing rather than passing "
+                "a config whose fault is structurally invisible."}), file=sys.stderr)
+            sys.exit(2)
         return None, "PyOpenColorIO not installed, structural grading only"
 
     try:
