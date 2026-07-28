@@ -41,10 +41,29 @@ def ok(reason):
     sys.exit(0)
 
 
+class _OCIOLoader(yaml.SafeLoader):
+    """OCIO configs use custom YAML tags (!<ColorSpace>, !<ExponentTransform>).
+    SafeLoader refuses them, so map every unknown tag to its plain value and
+    keep the tag name, which is what the structural checks need."""
+
+
+def _any_tag(loader, suffix, node):
+    if isinstance(node, yaml.MappingNode):
+        d = loader.construct_mapping(node, deep=True)
+        d["_tag"] = suffix
+        return d
+    if isinstance(node, yaml.SequenceNode):
+        return loader.construct_sequence(node, deep=True)
+    return loader.construct_scalar(node)
+
+
+_OCIOLoader.add_multi_constructor("", _any_tag)
+
+
 def load_yaml(path, what):
     try:
         with open(path) as f:
-            return yaml.safe_load(f)
+            return yaml.load(f, Loader=_OCIOLoader)
     except FileNotFoundError:
         fail(f"no {what} at {path}")
     except yaml.YAMLError as e:
@@ -86,9 +105,13 @@ def check_structure(cfg, spec):
     # 3. exactly one reference space. OCIO defines the reference as the space
     #    with no transforms; two of them makes the graph ambiguous rather than
     #    invalid, which is the worst kind of fault.
-    refs = [cs["name"] for cs in spaces
-            if not cs.get("to_reference") and not cs.get("from_reference")
-            and not cs.get("isdata")]
+    # OCIO v2 serialises to_scene_reference / from_scene_reference; v1 used
+    # to_reference / from_reference. Read the real output before trusting either.
+    def has_transform(cs):
+        return any(cs.get(k) for k in ("to_reference", "from_reference",
+                                       "to_scene_reference", "from_scene_reference"))
+
+    refs = [cs["name"] for cs in spaces if not has_transform(cs) and not cs.get("isdata")]
     if len(refs) == 0:
         fail("no reference colorspace: every space declares a transform")
     if len(refs) > 1:
@@ -97,7 +120,7 @@ def check_structure(cfg, spec):
     # 4. data spaces must not carry a colour transform. A data space that gets
     #    transformed corrupts depth, normals and mattes without any error.
     for cs in spaces:
-        if cs.get("isdata") and (cs.get("to_reference") or cs.get("from_reference")):
+        if cs.get("isdata") and has_transform(cs):
             fail(f"colorspace '{cs['name']}' is marked isdata but declares a transform, "
                  "which will corrupt depth and matte channels")
 
@@ -135,24 +158,33 @@ def check_numeric(path, spec):
     scene_linear = cfg.getCanonicalName("scene_linear") or "scene_linear"
     for case in spec.get("round_trips", []):
         space, value, tol = case["colorspace"], case["value"], case.get("tolerance", 1e-4)
+        expect = case.get("expect_encoded")
         try:
             fwd = cfg.getProcessor(scene_linear, space).getDefaultCPUProcessor()
             back = cfg.getProcessor(space, scene_linear).getDefaultCPUProcessor()
         except Exception as e:
             fail(f"no processor between scene_linear and '{space}': {str(e)[:180]}")
-        px = list(value)
-        fwd.applyRGB(px)
-        encoded = list(px)
-        back.applyRGB(px)
-        for a, b in zip(px, value):
+        # applyRGB returns a new list rather than mutating in place. Probed
+        # against PyOpenColorIO 2.5.2 rather than assumed; assuming it cost an
+        # hour and produced a grader that failed its own correct answer.
+        encoded = fwd.applyRGB(list(value))
+        decoded = back.applyRGB(list(encoded))
+        for a, b in zip(decoded, value):
             if abs(a - b) > tol:
                 fail(f"round trip through '{space}' does not return the input: "
-                     f"{value} became {[round(v, 5) for v in px]}. "
+                     f"{value} became {[round(v, 5) for v in decoded]}. "
                      "A transform direction is inverted.")
         # a transform that changes nothing is a transform that is not wired
         if all(abs(e - v) < 1e-9 for e, v in zip(encoded, value)) and not case.get("identity_ok"):
             fail(f"encoding into '{space}' returned the input unchanged, "
                  "so the transform is missing or a no-op")
+        # Round-tripping passes even when BOTH directions are flipped, because
+        # the inverse of an inverse still returns the input. So also assert the
+        # encoded value against a known-correct number.
+        if expect and any(abs(e - x) > tol for e, x in zip(encoded, expect)):
+            fail(f"encoding {value} into '{space}' gave "
+                 f"{[round(v, 4) for v in encoded]}, expected {expect}. "
+                 "The transform direction is inverted.")
 
     return True, "round trips verified"
 

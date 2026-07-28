@@ -1,77 +1,72 @@
 ocio_profile_version: 2
+
+environment:
+  {}
 search_path: luts
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
 roles:
-  default: ACEScg
-  reference: ACEScg
-  scene_linear: ACEScg
   color_picking: sRGB - Texture
   data: Raw
+  default: ACEScg
   matte_paint: sRGB - Texture
+  reference: ACEScg
+  scene_linear: ACEScg
   texture_paint: sRGB - Texture
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
 displays:
   sRGB:
-  - '!<View>': null
-    name: Standard
-    colorspace: sRGB - Display
-active_displays:
-- sRGB
-active_views:
-- Standard
+    - !<View> {name: Standard, colorspace: sRGB - Display}
+
+active_displays: [sRGB]
+active_views: [Standard]
+
 colorspaces:
-- name: ACEScg
-  family: ACES
-  bitdepth: 32f
-  description: 'The working space. Reference: no transform.'
-  isdata: false
-  allocation: lg2
-  allocationvars:
-  - -8
-  - 5
-  - 0.00390625
-- name: Raw
-  family: Utility
-  bitdepth: 32f
-  description: Data. Never colour managed.
-  isdata: true
-  allocation: uniform
-- name: sRGB - Texture
-  family: Texture
-  bitdepth: 32f
-  isdata: false
-  allocation: uniform
-  to_reference:
-    '!<ExponentWithLinearTransform>': null
-    gamma:
-    - 2.4
-    - 2.4
-    - 2.4
-    - 1.0
-    offset:
-    - 0.055
-    - 0.055
-    - 0.055
-    - 0.0
-    direction: inverse
-- name: sRGB - Display
-  family: Display
-  bitdepth: 32f
-  isdata: false
-  allocation: uniform
-  from_reference:
-    '!<ExponentWithLinearTransform>': null
-    gamma:
-    - 2.4
-    - 2.4
-    - 2.4
-    - 1.0
-    offset:
-    - 0.055
-    - 0.055
-    - 0.055
-    - 0.0
-    direction: forward
-- name: Linear Rec.709
-  family: Utility
-  bitdepth: 32f
-  isdata: false
-  allocation: lg2
+  - !<ColorSpace>
+    name: ACEScg
+    family: ACES
+    equalitygroup: ""
+    bitdepth: 32f
+    description: "Working space. Reference: declares no transform."
+    isdata: false
+    allocation: lg2
+    allocationvars: [-8, 5, 0.00390625]
+
+  - !<ColorSpace>
+    name: Raw
+    family: Utility
+    equalitygroup: ""
+    bitdepth: 32f
+    description: Data. Never colour managed.
+    isdata: true
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: sRGB - Texture
+    family: Texture
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    allocation: uniform
+    to_scene_reference: !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
+
+  - !<ColorSpace>
+    name: sRGB - Display
+    family: Display
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    allocation: uniform
+    from_scene_reference: !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+  - !<ColorSpace>
+    name: Linear Rec.709
+    family: Utility
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    allocation: lg2
