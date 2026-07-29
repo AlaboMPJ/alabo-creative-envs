@@ -1,0 +1,20 @@
+[project]
+name = "video-conform-repair"
+description = "Repair a conform that plays cleanly and is wrong."
+version = "0.1.0"
+requires-python = ">=3.10"
+readme = "README.md"
+keywords = ["singleturn", "eval", "vfx", "creative-software"]
+tags = ["video", "vfx", "creative-software", "silent-wrongness"]
+dependencies = [
+  "datasets",
+  "verifiers>=0.2.0",
+  "numpy",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = ["video_conform_repair.py", "tasks/", "tests/", "instruction.md", "task.toml"]

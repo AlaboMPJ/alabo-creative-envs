@@ -1,0 +1,19 @@
+[project]
+name = "comfyui-graph-repair"
+description = "Repair a ComfyUI API-format workflow until it validates and executes."
+version = "0.1.0"
+requires-python = ">=3.10"
+readme = "README.md"
+keywords = ["singleturn", "eval", "vfx", "creative-software"]
+tags = ["comfyui", "vfx", "creative-software", "silent-wrongness"]
+dependencies = [
+  "datasets",
+  "verifiers>=0.2.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = ["comfyui_graph_repair.py", "tasks/", "tests/", "instruction.md", "task.toml"]
