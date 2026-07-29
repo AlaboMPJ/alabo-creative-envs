@@ -228,6 +228,27 @@ def main():
         if rw != 1.0:
             print(f"            caught by: {why[:78]}")
 
+    # Coverage. Three environments are attacked by name in this file, so a fourth
+    # can be added with no attacks at all and the suite still prints a clean pass.
+    # That is the same silent skip the environments exist to grade, committed by
+    # the tool that is supposed to catch it.
+    attacked = {"comfyui_graph_repair", "ocio_config_repair", "exr_render_repair"}
+    elsewhere = {"video_conform_repair": "tools/hack_video.py"}
+    on_disk = {d for d in os.listdir(ENVS)
+               if os.path.isdir(os.path.join(ENVS, d))}
+    uncovered = sorted(on_disk - attacked - set(elsewhere))
+    print()
+    print("  Attack coverage")
+    for e in sorted(on_disk):
+        where = ("this suite" if e in attacked
+                 else elsewhere.get(e) or "NOTHING ATTACKS THIS")
+        print(f"    {e:26} {where}")
+    if uncovered:
+        print()
+        print(f"  {len(uncovered)} environment(s) have no adversarial pass at all.")
+        print("  An unattacked grader is an untested one, and the first run of every")
+        print("  suite so far breached roughly half its checks.")
+
     print()
     if breached:
         print(f"  {len(breached)} attack(s) scored full reward without fixing the fault:")
@@ -237,7 +258,7 @@ def main():
         print("  a model to produce what scores rather than what is correct.\n")
     else:
         print("  No attack scored. Every grader required the actual repair.\n")
-    sys.exit(len(breached))
+    sys.exit(len(breached) + len(uncovered))
 
 
 if __name__ == "__main__":
