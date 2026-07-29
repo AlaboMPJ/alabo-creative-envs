@@ -1,0 +1,49 @@
+[environment]
+id = "video_conform_repair"
+version = "0.1.0"
+application = "FFmpeg"
+licence_required = false
+author = "Alabo"
+
+[reward]
+type = "binary"
+pass = 1.0
+fail = 0.0
+# No partial credit. A conform is either correct on the timeline or it is not,
+# and "nearly the right geometry" is exactly the fault this environment exists
+# to catch: it looks fine until a client sees it.
+
+[grading]
+entrypoint = "tests/test.sh"
+grader = "tests/grader.py"
+# Every check is numeric and every check has a partner that fails the cheap way
+# of satisfying it. There is no structural level, because structure is never the
+# problem: every broken file here is a valid MP4 that plays start to finish in
+# any player and returns 0 from ffmpeg.
+#
+# Provenance: all three faults were met on real hardware on 2026-07-29 driving a
+# DJI Osmo Pocket 3 into a headless capture tool. None of them raised an error.
+adversarial = "tools/hack_video.py"
+
+[agent]
+reads = ["task_instance.json", "broken.mp4", "segments/"]
+writes = ["submission.mp4"]
+max_turns = 25
+
+[[tasks]]
+id = "head_ramp"
+file = "tasks/head_ramp.json"
+difficulty = "easy"
+skill = "know that a camera's first frames are the auto-exposure settle rather than picture, and that the fix is a trim and never a grade"
+
+[[tasks]]
+id = "vertical_into_landscape"
+file = "tasks/vertical_into_landscape.json"
+difficulty = "medium"
+skill = "conform a portrait source to a landscape canvas by fitting and padding, knowing that a plain scale squashes everyone in shot and that cropping to fill silently discards the sides"
+
+[[tasks]]
+id = "transition_drift"
+file = "tasks/transition_drift.json"
+difficulty = "hard"
+skill = "know that a cross-fade consumes its overlap, so offsets are measured against the assembly built so far and not the raw timeline, and that getting it wrong can drop a whole clip while ffmpeg reports success"

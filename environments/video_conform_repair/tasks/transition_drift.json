@@ -1,0 +1,41 @@
+{
+  "id": "transition_drift",
+  "application": "FFmpeg",
+  "broken_file": "transition_drift.mp4",
+  "reference": "transition_drift_reference.mp4",
+  "segments": [
+    "drift_seg0.mp4",
+    "drift_seg1.mp4",
+    "drift_seg2.mp4"
+  ],
+  "symptom": "Three 3.00s clips were joined by two 0.80s dissolves. The assembly plays without error and ffmpeg reported success, but the third clip is nowhere in it and the file ends early.",
+  "deliver": {
+    "seconds": 7.4,
+    "fps": 30,
+    "width": 640,
+    "height": 360
+  },
+  "transitions": [
+    {
+      "at": 2.6,
+      "between": [
+        0,
+        1
+      ]
+    },
+    {
+      "at": 4.8,
+      "between": [
+        1,
+        2
+      ]
+    }
+  ],
+  "segment_duration": 3.0,
+  "transition_duration": 0.8,
+  "rules": [
+    "Rebuild the assembly from the three segments provided.",
+    "Both dissolves must be real cross-fades, not cuts.",
+    "Trimming the existing file to the right length is not a repair."
+  ]
+}

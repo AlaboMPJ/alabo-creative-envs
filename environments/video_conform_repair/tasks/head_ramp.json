@@ -1,0 +1,17 @@
+{
+  "id": "head_ramp",
+  "application": "FFmpeg",
+  "broken_file": "head_ramp.mp4",
+  "reference": "head_ramp_reference.mp4",
+  "symptom": "The head of the clip fades up from black over about a second. It plays, it has the right frame size, nothing errors. The camera's auto-exposure was still settling when recording started.",
+  "deliver": {
+    "seconds": 5.0,
+    "fps": 30,
+    "width": 640,
+    "height": 360
+  },
+  "rules": [
+    "Do not brighten the clip. The exposure of the good picture is correct.",
+    "The delivered clip must be 5.00s, so trimming the head means the material is there to trim from."
+  ]
+}

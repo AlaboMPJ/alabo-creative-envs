@@ -25,7 +25,19 @@ statement about craft, expressed as code.
 | `comfyui_graph_repair` | ComfyUI | repair a broken API-format workflow until it validates and executes | none |
 | `ocio_config_repair` | OpenColorIO | repair a colour config that loads, renders, and is wrong | none |
 | `exr_render_repair` | OpenEXR | repair a render handoff that opens cleanly and is wrong | none |
+| `video_conform_repair` | FFmpeg | repair a clip that plays perfectly and is wrong | none |
 
+
+`video_conform_repair` grades editorial craft on files that are never invalid: a
+camera's auto-exposure ramp shipped in the cut, a portrait source squashed onto a
+landscape canvas, and a cross-fade chain whose offsets were measured against the
+raw timeline instead of the assembly, which drops a whole clip while ffmpeg
+reports success. All three faults were met on real hardware on 2026-07-29 driving
+a DJI Osmo Pocket 3 into a headless capture tool, rather than invented for the
+environment. Its graders measure the picture: a disc must stay round, edges must
+be black where material was fitted rather than cropped, and the midpoint of a
+dissolve must be a genuine blend. Nine adversarial attacks are held in
+`tools/hack_video.py` and all nine score zero.
 
 `exr_render_repair` grades the render-to-comp handoff, which is the widest
 silent-wrongness surface in a pipeline: depth normalised to 0-1 so every defocus

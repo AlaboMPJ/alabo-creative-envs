@@ -1,0 +1,18 @@
+{
+  "id": "vertical_into_landscape",
+  "application": "FFmpeg",
+  "broken_file": "vertical_into_landscape.mp4",
+  "reference": "vertical_into_landscape_reference.mp4",
+  "symptom": "A portrait capture has to go on a landscape timeline. The source is 360x640 and the delivery is 640x360.",
+  "deliver": {
+    "seconds": 4.0,
+    "fps": 30,
+    "width": 640,
+    "height": 360
+  },
+  "rules": [
+    "Nothing may be cropped. The whole source frame must remain visible.",
+    "Geometry must be preserved. Round things stay round.",
+    "Fill any unused canvas with black."
+  ]
+}
