@@ -46,6 +46,16 @@ ENVIRONMENTS = {
         "exclude": ("_reference_good",),
         "summary": "Repair a render handoff that opens cleanly and is wrong.",
     },
+    # Added 2026-07-29. The environment existed and was not registered here, so
+    # it graded fine at a terminal and did not exist at all under verifiers.
+    # Its references are per-task (<id>_reference.mp4) rather than one shared
+    # file, so the exclusion is by suffix.
+    "video_conform_repair": {
+        "artifact": "submission.mp4",
+        "task_glob": "*.json",
+        "exclude": ("_reference_good",),
+        "summary": "Repair a conform that plays cleanly and is wrong.",
+    },
 }
 
 
