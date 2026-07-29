@@ -31,6 +31,29 @@ EXT = {"comfyui_graph_repair": ".json",
        "ocio_config_repair": ".ocio",
        "exr_render_repair": ".exr"}
 
+# Plain English for the page. An identifier like depth_normalised tells a
+# compositor nothing and tells a hiring lead less. These belong in the task specs
+# eventually; they live here until the specs carry a title field.
+AREAS = {"comfyui_graph_repair": "ComfyUI workflows",
+         "ocio_config_repair": "Colour management",
+         "exr_render_repair": "Render handoff"}
+TITLES = {
+    "feedback_cycle": "A loop that hangs forever",
+    "missing_vae_decode": "A workflow that saves nothing",
+    "orphaned_conditioning": "The negative prompt wired to the positive",
+    "sdxl_dangling_latent": "A link pointing at a node that is not there",
+    "ambiguous_reference": "Two colourspaces both claiming to be the reference",
+    "dangling_role": "A role pointing at a colourspace that does not exist",
+    "data_space_transformed": "Depth and mattes being colour managed",
+    "inverted_direction": "A colour transform running backwards",
+    "missing_data_role": "No data role, so depth gets graded like colour",
+    "aov_naming": "Passes renamed so the comp cannot find them",
+    "eight_bit_upconvert": "A float file carrying only 8-bit information",
+    "normals_not_unit": "Normals that are not unit length",
+    "alpha_double_premult": "Alpha multiplied in twice",
+    "depth_normalised": "Depth squashed to 0 and 1",
+}
+
 
 # ---------------------------------------------------------------- grading
 
@@ -138,54 +161,84 @@ def esc(s):
 
 
 CSS = """
-:root{--bg:#000;--fg:#ececec;--muted:#8a8a8a;--dim:#5f5f5f;--accent:#9aa1a8;
---bad:#b06a6a;--good:#7f9a7f;--line:rgba(255,255,255,.11);--soft:rgba(255,255,255,.055);
---card:rgba(255,255,255,.022);--sans:'Sohne','Helvetica Neue',Arial,sans-serif;
---serif:'Canela',Georgia,serif;--mono:ui-monospace,Menlo,monospace}
+:root{--bg:#000;--fg:#ececec;--muted:#8a8a8a;--dim:#585858;--accent:#9aa1a8;
+--bad:#b8695f;--good:#7d9c86;--line:rgba(255,255,255,.10);--soft:rgba(255,255,255,.05);
+--sans:'Sohne',-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;
+--serif:'Canela','Iowan Old Style','Palatino Linotype',Georgia,serif;
+--mono:'Sohne Mono',ui-monospace,'SF Mono',Menlo,monospace}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;
-line-height:1.6;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1080px;margin:0 auto;padding:60px 34px 110px}
-h1{font-family:var(--serif);font-weight:400;font-size:34px;margin:0 0 6px}
-.sub{color:var(--muted);max-width:64ch;margin:0 0 34px}
-h2{font-family:var(--serif);font-weight:400;font-size:25px;margin:52px 0 4px}
-.envline{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.1em;
-margin-bottom:18px}
-.task{border:1px solid var(--soft);background:var(--card);margin:0 0 16px}
-.task .hd{display:flex;justify-content:space-between;align-items:baseline;gap:18px;
-padding:17px 22px;border-bottom:1px solid var(--soft);flex-wrap:wrap}
-.task h3{font-family:var(--serif);font-weight:400;font-size:19px;margin:0}
-.verdict{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em}
-.sound{color:var(--good)}.flag{color:var(--bad)}
-.bd{padding:18px 22px 22px}
-.sym{color:var(--muted);font-size:14px;margin:0 0 16px;max-width:74ch}
-.sym b{color:var(--accent);font-weight:400;font-family:var(--mono);font-size:10.5px;
-letter-spacing:.12em;display:block;margin-bottom:5px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:6px 0 4px}
-@media(max-width:760px){.grid{grid-template-columns:1fr}}
-.col h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;color:var(--accent);
-font-weight:400;margin:0 0 10px}
-.panel{margin:0 0 14px}
-.panel img{width:100%;display:block;border:1px solid var(--soft);background:#050505}
-.panel .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--dim);
-margin:6px 0 2px}
-.panel .num{font-family:var(--mono);font-size:11px;color:var(--muted)}
-.reason{font-family:var(--mono);font-size:11.5px;line-height:1.65;padding:12px 14px;
-border-left:2px solid var(--soft);color:var(--muted);margin:14px 0 0;white-space:pre-wrap;
+line-height:1.6;-webkit-font-smoothing:antialiased;hyphens:none}
+.wrap{max-width:900px;margin:0 auto;padding:76px 36px 120px}
+
+/* Header. The whole verdict in one number, before anything else. */
+h1{font-family:var(--serif);font-weight:400;font-size:38px;margin:0 0 14px;letter-spacing:-.01em}
+.score{font-family:var(--serif);font-size:56px;line-height:1;margin:0 0 8px}
+.score .n{color:var(--good)}.score .n.bad{color:var(--bad)}
+.score small{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--dim);
+display:block;margin-top:12px}
+.sub{color:var(--muted);max-width:58ch;margin:26px 0 0;font-size:15px}
+.rule{border:0;border-top:1px solid var(--line);margin:44px 0 0}
+
+/* The board. One line per fault, in the words an artist would use. */
+h2{font-family:var(--serif);font-size:26px;font-weight:400;color:var(--fg);
+margin:60px 0 2px;letter-spacing:-.01em}
+.count{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--dim);
+padding-bottom:12px;border-bottom:1px solid var(--soft);margin-bottom:2px}
+details.task{border-bottom:1px solid var(--soft)}
+details.task > summary{list-style:none;cursor:pointer;display:grid;
+grid-template-columns:1fr 210px;gap:24px;align-items:center;padding:20px 2px;
+transition:background .12s}
+details.task > summary::-webkit-details-marker{display:none}
+details.task > summary:hover{background:rgba(255,255,255,.025)}
+details.task[open] > summary{background:rgba(255,255,255,.025)}
+.tname{font-family:var(--serif);font-size:20px;color:var(--fg);line-height:1.35}
+.tname .said{font-family:var(--sans);font-size:13.5px;color:var(--dim);display:block;
+margin-top:6px;font-style:italic}
+.status{display:flex;flex-direction:column;gap:7px;justify-self:end}
+.st{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:9px;
+white-space:nowrap}
+.st i{width:9px;height:9px;flex:0 0 9px;background:var(--bad);border-radius:50%}
+.st.on i{background:var(--good)}
+.st.on{color:var(--fg)}
+@media(max-width:640px){details.task > summary{grid-template-columns:1fr}
+.status{justify-self:start;flex-direction:row;gap:18px}}
+
+/* Opened detail. Reasons first, because the reasons are the judgement. */
+.bd{padding:6px 2px 34px}
+.sym{color:var(--muted);font-size:15px;margin:0 0 22px;max-width:70ch;font-style:italic}
+.reason{font-family:var(--mono);font-size:12px;line-height:1.7;padding:0 0 0 16px;
+border-left:2px solid var(--soft);color:var(--muted);margin:0 0 16px;white-space:pre-wrap;
 overflow-x:auto}
 .reason.r0{border-left-color:var(--bad)}
 .reason.r1{border-left-color:var(--good)}
-.reason b{color:var(--accent);font-weight:400;display:block;margin-bottom:5px;
-font-size:9.5px;letter-spacing:.15em}
-pre.diff{font-family:var(--mono);font-size:11px;line-height:1.55;color:var(--muted);
-background:rgba(255,255,255,.015);border:1px solid var(--soft);padding:13px 15px;margin:12px 0 0;
-overflow-x:auto;max-height:340px}
+.reason b{color:var(--accent);font-weight:400;display:block;margin-bottom:6px;
+font-size:9.5px;letter-spacing:.16em}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:24px 0 0}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+.col h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--accent);
+font-weight:400;margin:0 0 12px}
+.panel{margin:0 0 18px}
+.panel img{width:100%;display:block;background:#050505}
+.panel .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--dim);
+margin:8px 0 3px}
+.panel .num{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.panel .num.key{color:var(--fg)}
+details.eq{margin:20px 0 0}
+details.eq summary{list-style:none;cursor:pointer;font-family:var(--mono);font-size:9.5px;
+letter-spacing:.16em;color:var(--dim);padding:8px 0}
+details.eq summary::-webkit-details-marker{display:none}
+details.eq summary:hover{color:var(--accent)}
+pre.diff{font-family:var(--mono);font-size:11.5px;line-height:1.6;color:var(--muted);
+border-left:2px solid var(--soft);padding:2px 0 2px 16px;margin:6px 0 0;
+overflow-x:auto;max-height:360px}
 pre.diff .a{color:var(--good)}pre.diff .d{color:var(--bad)}
-.alarm{border:1px solid var(--bad);padding:18px 22px;margin:0 0 34px;color:var(--fg)}
-.alarm h3{font-family:var(--serif);font-weight:400;font-size:19px;margin:0 0 8px}
-.alarm ul{margin:0;padding-left:18px}.alarm li{color:var(--muted);font-size:14px}
-footer{margin-top:70px;padding-top:20px;border-top:1px solid var(--line);
-font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.1em}
+
+.alarm{border-left:2px solid var(--bad);padding:2px 0 2px 18px;margin:34px 0 0}
+.alarm h3{font-family:var(--serif);font-weight:400;font-size:21px;margin:0 0 10px}
+.alarm p{color:var(--muted);font-size:14px;margin:0 0 6px}
+footer{margin-top:80px;padding-top:22px;border-top:1px solid var(--line);
+font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.14em}
 """
 
 
@@ -209,9 +262,8 @@ def main():
         ref = os.path.join(tdir, "_reference_good" + ext)
         tasks = sorted(f for f in os.listdir(tdir)
                        if f.endswith(".json") and not f.startswith("_"))
-        body.append(f"<h2>{esc(env)}</h2>")
-        body.append(f'<div class="envline">{len(tasks)} TASKS &nbsp;·&nbsp; '
-                    f'GRADED IN BOTH DIRECTIONS</div>')
+        body.append(f'<h2>{esc(AREAS.get(env, env))}</h2>')
+        body.append(f'<div class="count">{len(tasks)} FAULTS &nbsp;·&nbsp; {esc(env)}</div>')
         # A grader can score 0.0 on every broken file for one generic reason and
         # look perfect on a spreadsheet. If several tasks in an environment fail
         # with the identical sentence, it is not diagnosing, it is refusing.
@@ -267,20 +319,48 @@ def main():
                 diff = text_diff(broken, ref, f"broken/{tid}{ext}",
                                  f"reference{ext}")
 
-            v = ('<span class="verdict sound">SOUND</span>' if sound
-                 else '<span class="verdict flag">FLAGGED</span>')
-            h = [f'<div class="task"><div class="hd"><h3>{esc(tid)}</h3>{v}</div><div class="bd">']
-            if spec.get("symptom"):
-                h.append(f'<p class="sym"><b>WHAT THE ARTIST SAID</b>{esc(spec["symptom"])}</p>')
+            # The summary line has to answer the only question that matters
+            # without being opened: did it catch the fault, did it accept good
+            # work. Two bars and a clipped reason. Everything else is behind the
+            # disclosure, default closed, so fourteen tasks read as one page
+            # instead of one scroll.
+            title = TITLES.get(tid, tid.replace("_", " ").capitalize())
+            said = spec.get("symptom", "")
+            said_clip = said if len(said) < 92 else said[:89] + "..."
+            status = (
+                f'<div class="status">'
+                f'<span class="st{" on" if catches else ""}"><i></i>'
+                f'{"Caught the mistake" if catches else "Missed the mistake"}</span>'
+                f'<span class="st{" on" if accepts else ""}"><i></i>'
+                f'{"Passed good work" if accepts else "Failed good work"}</span></div>')
+            h = [f'<details class="task"><summary>'
+                 f'<span class="tname">{esc(title)}'
+                 f'<span class="said">{esc(said_clip)}</span></span>'
+                 f'{status}</summary><div class="bd">']
+
+            # Reasons before pictures. The reason is the thing being judged, and
+            # it is written to be read by the person who would have said the
+            # sentence above it rather than by the runner.
+            for lab, res, want in (("What it said about the broken file", on_broken, 0.0),
+                                   ("What it said about the correct file", on_good, 1.0)):
+                r = res.get("reward")
+                cls = "r1" if r == 1.0 else "r0" if r == 0.0 else ""
+                right = "the right call" if r == want else "WRONG, look at this"
+                h.append(f'<div class="reason {cls}"><b>{esc(lab)} &nbsp;·&nbsp; {right}</b>'
+                         f'{esc(res.get("reason", ""))}</div>')
 
             if ev_broken or ev_good:
                 h.append('<div class="grid">')
                 for label, panels in (("BROKEN", ev_broken), ("KNOWN GOOD", ev_good)):
                     h.append(f'<div class="col"><h4>{label}</h4>')
                     for name, uri, num in panels:
+                        # The number that distinguishes the two files gets the
+                        # bright treatment, because on a stretched depth pass the
+                        # picture is identical and the number is the whole story.
+                        key = " key" if ("ACTUAL RANGE" in num or "must be" in num) else ""
                         h.append(f'<div class="panel"><img src="{uri}" alt="{esc(name)}">'
                                  f'<div class="lab">{esc(name)}</div>'
-                                 f'<div class="num">{esc(num)}</div></div>')
+                                 f'<div class="num{key}">{esc(num)}</div></div>')
                     h.append("</div>")
                 h.append("</div>")
 
@@ -289,29 +369,35 @@ def main():
                 for ln in diff.splitlines()[:160]:
                     cls = "a" if ln.startswith("+") else "d" if ln.startswith("-") else ""
                     lines.append(f'<span class="{cls}">{esc(ln)}</span>' if cls else esc(ln))
-                h.append('<pre class="diff">' + "\n".join(lines) + "</pre>")
+                h.append('<details class="eq"><summary>SHOW THE INJECTED FAULT</summary>'
+                         '<pre class="diff">' + "\n".join(lines) + "</pre></details>")
 
-            for lab, res in (("ON THE BROKEN FILE", on_broken), ("ON THE KNOWN-GOOD FILE", on_good)):
-                r = res.get("reward")
-                cls = "r1" if r == 1.0 else "r0" if r == 0.0 else ""
-                h.append(f'<div class="reason {cls}"><b>{lab} &nbsp; REWARD {r}</b>'
-                         f'{esc(res.get("reason", ""))}</div>')
-            h.append("</div></div>")
+            h.append("</div></details>")
             body.append("".join(h))
 
-    head = [f"<h1>Grader review</h1>",
-            f'<p class="sub">Every task graded twice. The broken file must fail with a reason '
-            f'that names the real fault, and the known-good file must pass. A task is sound only '
-            f'when both hold. Read the reasons and decide whether the machine was right; that '
-            f'judgement is the thing this page exists for.</p>']
+    total = counts[0] + counts[1]
+    bad = " bad" if counts[1] else ""
+    verdict = ("Every check is working." if not counts[1]
+               else f"{counts[1]} of {total} need looking at.")
+    head = ["<h1>Do the checks work?</h1>",
+            f'<p class="score"><span class="n{bad}">{counts[0]}</span>'
+            f'<span style="color:var(--dim)"> of {total}</span>'
+            f"<small>{esc(verdict.upper())}</small></p>",
+            '<p class="sub">Each fault below was put into a file on purpose. The checker has to '
+            'do two things and it has to do both. Notice the mistake, and say what it is in words '
+            'a compositor would recognise. And leave correct work alone, because a checker that '
+            'fails everything is no use to anyone.</p>',
+            '<p class="sub">The two dots on each line are those two things. Open a line to read '
+            'what the checker actually said and decide whether you agree with it. That decision '
+            'is yours; this page only puts it in front of you.</p>']
     if alarms:
-        head.append('<div class="alarm"><h3>Not fit to distribute</h3><ul>'
-                    + "".join(f"<li>{esc(x)}</li>" for x in alarms) + "</ul></div>")
-    head.append(f'<div class="envline">{counts[0]} SOUND &nbsp;·&nbsp; {counts[1]} FLAGGED</div>')
+        head.append('<div class="alarm"><h3>Do not send this out yet</h3>'
+                    + "".join(f"<p>{esc(x)}</p>" for x in alarms) + "</div>")
+    head.append('<hr class="rule">')
 
     html = (f"<!doctype html><html lang=en><head><meta charset=utf-8>"
             f"<meta name=viewport content='width=device-width, initial-scale=1'>"
-            f"<title>Grader review</title><style>{CSS}</style></head><body>"
+            f"<title>Do the checks work</title><style>{CSS}</style></head><body>"
             f'<div class="wrap">{"".join(head)}{"".join(body)}'
             f"<footer>ALABO CREATIVE ENVS &nbsp;·&nbsp; GRADER REVIEW</footer>"
             f"</div></body></html>")
