@@ -133,7 +133,7 @@ def exr_panels(ch):
         # the same picture. The number is the evidence, the image is orientation.
         span = max(float(z.max() - z.min()), 1e-9)
         out.append(("Depth (stretched)", png_uri(((z - z.min()) / span * 255).astype(np.uint8)),
-                    f"ACTUAL RANGE {z.min():.3f} to {z.max():.3f}"))
+                    f"Actual range {z.min():.3f} to {z.max():.3f}"))
     if all(c in ch for c in ("N.X", "N.Y", "N.Z")):
         n = np.stack([ch["N.X"], ch["N.Y"], ch["N.Z"]], -1)
         length = np.linalg.norm(n, axis=-1)
@@ -175,7 +175,7 @@ line-height:1.6;-webkit-font-smoothing:antialiased;hyphens:none}
 h1{font-family:var(--serif);font-weight:400;font-size:38px;margin:0 0 14px;letter-spacing:-.01em}
 .score{font-family:var(--serif);font-size:56px;line-height:1;margin:0 0 8px}
 .score .n{color:var(--good)}.score .n.bad{color:var(--bad)}
-.score small{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--dim);
+.score small{font-family:var(--sans);font-size:14px;letter-spacing:0;color:var(--muted);
 display:block;margin-top:12px}
 .sub{color:var(--muted);max-width:58ch;margin:26px 0 0;font-size:15px}
 .rule{border:0;border-top:1px solid var(--line);margin:44px 0 0}
@@ -183,7 +183,7 @@ display:block;margin-top:12px}
 /* The board. One line per fault, in the words an artist would use. */
 h2{font-family:var(--serif);font-size:26px;font-weight:400;color:var(--fg);
 margin:60px 0 2px;letter-spacing:-.01em}
-.count{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--dim);
+.count{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--dim);
 padding-bottom:12px;border-bottom:1px solid var(--soft);margin-bottom:2px}
 details.task{border-bottom:1px solid var(--soft)}
 details.task > summary{list-style:none;cursor:pointer;display:grid;
@@ -213,20 +213,20 @@ overflow-x:auto}
 .reason.r0{border-left-color:var(--bad)}
 .reason.r1{border-left-color:var(--good)}
 .reason b{color:var(--accent);font-weight:400;display:block;margin-bottom:6px;
-font-size:9.5px;letter-spacing:.16em}
+font-family:var(--sans);font-size:12.5px;letter-spacing:0}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin:24px 0 0}
 @media(max-width:700px){.grid{grid-template-columns:1fr}}
-.col h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--accent);
+.col h4{font-family:var(--sans);font-size:13px;letter-spacing:0;color:var(--accent);
 font-weight:400;margin:0 0 12px}
 .panel{margin:0 0 18px}
 .panel img{width:100%;display:block;background:#050505}
-.panel .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--dim);
+.panel .lab{font-family:var(--sans);font-size:12.5px;letter-spacing:0;color:var(--dim);
 margin:8px 0 3px}
 .panel .num{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 .panel .num.key{color:var(--fg)}
 details.eq{margin:20px 0 0}
-details.eq summary{list-style:none;cursor:pointer;font-family:var(--mono);font-size:9.5px;
-letter-spacing:.16em;color:var(--dim);padding:8px 0}
+details.eq summary{list-style:none;cursor:pointer;font-family:var(--sans);font-size:13px;
+letter-spacing:0;color:var(--dim);padding:8px 0}
 details.eq summary::-webkit-details-marker{display:none}
 details.eq summary:hover{color:var(--accent)}
 pre.diff{font-family:var(--mono);font-size:11.5px;line-height:1.6;color:var(--muted);
@@ -238,7 +238,7 @@ pre.diff .a{color:var(--good)}pre.diff .d{color:var(--bad)}
 .alarm h3{font-family:var(--serif);font-weight:400;font-size:21px;margin:0 0 10px}
 .alarm p{color:var(--muted);font-size:14px;margin:0 0 6px}
 footer{margin-top:80px;padding-top:22px;border-top:1px solid var(--line);
-font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.14em}
+font-family:var(--sans);font-size:12px;color:var(--dim);letter-spacing:0}
 """
 
 
@@ -263,7 +263,7 @@ def main():
         tasks = sorted(f for f in os.listdir(tdir)
                        if f.endswith(".json") and not f.startswith("_"))
         body.append(f'<h2>{esc(AREAS.get(env, env))}</h2>')
-        body.append(f'<div class="count">{len(tasks)} FAULTS &nbsp;·&nbsp; {esc(env)}</div>')
+        body.append(f'<div class="count">{len(tasks)} faults &nbsp;·&nbsp; {esc(env)}</div>')
         # A grader can score 0.0 on every broken file for one generic reason and
         # look perfect on a spreadsheet. If several tasks in an environment fail
         # with the identical sentence, it is not diagnosing, it is refusing.
@@ -345,19 +345,19 @@ def main():
                                    ("What it said about the correct file", on_good, 1.0)):
                 r = res.get("reward")
                 cls = "r1" if r == 1.0 else "r0" if r == 0.0 else ""
-                right = "the right call" if r == want else "WRONG, look at this"
+                right = "the right call" if r == want else "wrong, look at this"
                 h.append(f'<div class="reason {cls}"><b>{esc(lab)} &nbsp;·&nbsp; {right}</b>'
                          f'{esc(res.get("reason", ""))}</div>')
 
             if ev_broken or ev_good:
                 h.append('<div class="grid">')
-                for label, panels in (("BROKEN", ev_broken), ("KNOWN GOOD", ev_good)):
+                for label, panels in (("Broken", ev_broken), ("Correct", ev_good)):
                     h.append(f'<div class="col"><h4>{label}</h4>')
                     for name, uri, num in panels:
                         # The number that distinguishes the two files gets the
                         # bright treatment, because on a stretched depth pass the
                         # picture is identical and the number is the whole story.
-                        key = " key" if ("ACTUAL RANGE" in num or "must be" in num) else ""
+                        key = " key" if ("Actual range" in num or "must be" in num) else ""
                         h.append(f'<div class="panel"><img src="{uri}" alt="{esc(name)}">'
                                  f'<div class="lab">{esc(name)}</div>'
                                  f'<div class="num{key}">{esc(num)}</div></div>')
@@ -369,7 +369,7 @@ def main():
                 for ln in diff.splitlines()[:160]:
                     cls = "a" if ln.startswith("+") else "d" if ln.startswith("-") else ""
                     lines.append(f'<span class="{cls}">{esc(ln)}</span>' if cls else esc(ln))
-                h.append('<details class="eq"><summary>SHOW THE INJECTED FAULT</summary>'
+                h.append('<details class="eq"><summary>Show the fault that was put in</summary>'
                          '<pre class="diff">' + "\n".join(lines) + "</pre></details>")
 
             h.append("</div></details>")
@@ -382,7 +382,7 @@ def main():
     head = ["<h1>Do the checks work?</h1>",
             f'<p class="score"><span class="n{bad}">{counts[0]}</span>'
             f'<span style="color:var(--dim)"> of {total}</span>'
-            f"<small>{esc(verdict.upper())}</small></p>",
+            f"<small>{esc(verdict)}</small></p>",
             '<p class="sub">Each fault below was put into a file on purpose. The checker has to '
             'do two things and it has to do both. Notice the mistake, and say what it is in words '
             'a compositor would recognise. And leave correct work alone, because a checker that '
@@ -399,7 +399,7 @@ def main():
             f"<meta name=viewport content='width=device-width, initial-scale=1'>"
             f"<title>Do the checks work</title><style>{CSS}</style></head><body>"
             f'<div class="wrap">{"".join(head)}{"".join(body)}'
-            f"<footer>ALABO CREATIVE ENVS &nbsp;·&nbsp; GRADER REVIEW</footer>"
+            f"<footer>Alabo creative envs &nbsp;·&nbsp; grader review</footer>"
             f"</div></body></html>")
     open(a.out, "w", encoding="utf-8").write(html)
     print(f"{a.out}  {counts[0]} sound, {counts[1]} flagged")
