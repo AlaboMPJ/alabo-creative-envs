@@ -29,14 +29,33 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENVS = os.path.join(ROOT, "environments")
 EXT = {"comfyui_graph_repair": ".json",
        "ocio_config_repair": ".ocio",
-       "exr_render_repair": ".exr"}
+       "exr_render_repair": ".exr",
+       "video_conform_repair": ".mp4"}
 
 # Plain English for the page. An identifier like depth_normalised tells a
 # compositor nothing and tells a hiring lead less. These belong in the task specs
 # eventually; they live here until the specs carry a title field.
 AREAS = {"comfyui_graph_repair": "ComfyUI workflows",
          "ocio_config_repair": "Colour management",
-         "exr_render_repair": "Render handoff"}
+         "exr_render_repair": "Render handoff",
+         "video_conform_repair": "Video conform"}
+
+# Five files make an environment distributable. Anything missing means it runs on
+# this machine and nowhere else, which is how exr_render_repair sat in the README
+# as finished while having no instruction, no manifest and no container.
+REQUIRED = ["task.toml", "instruction.md", "environment/Dockerfile",
+            "tests/test.sh", "tests/grader.py"]
+
+# What is not here yet. A bench that only shows finished work looks complete and
+# tells you nothing about the shape of the job. Keep this in step with the README.
+PLANNED = [
+    ("Nuke script repair", "Graded statically from the .nk text, with check frames "
+                           "rendered locally so no licence has to travel."),
+    ("Audio delivery", "Polarity inverted on one mic, sample-rate laundering, a "
+                       "crossfade discontinuity, an over-limited master."),
+    ("Resolve conform", "Reads the project through Resolve's Python API. Feasible, "
+                        "unverified."),
+]
 TITLES = {
     "feedback_cycle": "A loop that hangs forever",
     "missing_vae_decode": "A workflow that saves nothing",
@@ -185,6 +204,17 @@ h2{font-family:var(--serif);font-size:26px;font-weight:400;color:var(--fg);
 margin:60px 0 2px;letter-spacing:-.01em}
 .count{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--dim);
 padding-bottom:12px;border-bottom:1px solid var(--soft);margin-bottom:2px}
+.ready{font-size:13.5px;margin:14px 0 6px;display:flex;align-items:center;gap:9px}
+.ready i{width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:var(--bad)}
+.ready.on i{background:var(--good)}
+.ready.on{color:var(--muted)}.ready{color:var(--bad)}
+.later{margin:64px 0 0;padding-top:26px;border-top:1px solid var(--line)}
+.later h3{font-family:var(--serif);font-size:22px;font-weight:400;margin:0 0 6px}
+.later p.i{color:var(--dim);font-size:14px;margin:0 0 26px;max-width:66ch}
+.later .row{padding:16px 0;border-bottom:1px solid var(--soft)}
+.later .row b{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--muted);
+display:block;margin-bottom:5px}
+.later .row span{font-size:13.5px;color:var(--dim)}
 details.task{border-bottom:1px solid var(--soft)}
 details.task > summary{list-style:none;cursor:pointer;display:grid;
 grid-template-columns:1fr 210px;gap:24px;align-items:center;padding:20px 2px;
@@ -259,11 +289,20 @@ def main():
         if not os.path.isdir(tdir):
             continue
         ext = EXT.get(env, "")
-        ref = os.path.join(tdir, "_reference_good" + ext)
         tasks = sorted(f for f in os.listdir(tdir)
                        if f.endswith(".json") and not f.startswith("_"))
         body.append(f'<h2>{esc(AREAS.get(env, env))}</h2>')
         body.append(f'<div class="count">{len(tasks)} faults &nbsp;·&nbsp; {esc(env)}</div>')
+        # Sound graders in an environment nobody else can run is a bench with no
+        # door. Five files make it distributable; say which are missing.
+        gone = [f for f in REQUIRED
+                if not os.path.exists(os.path.join(ENVS, env, f))]
+        if gone:
+            body.append(f'<div class="ready"><i></i>Cannot be sent out. Missing '
+                        f'{esc(", ".join(gone))}.</div>')
+        else:
+            body.append('<div class="ready on"><i></i>Complete. Anyone can run this '
+                        'in a container.</div>')
         # A grader can score 0.0 on every broken file for one generic reason and
         # look perfect on a spreadsheet. If several tasks in an environment fail
         # with the identical sentence, it is not diagnosing, it is refusing.
@@ -285,6 +324,16 @@ def main():
                 json.dump(spec["broken_graph"], open(broken, "w"))
             elif not os.path.exists(broken):
                 broken = os.path.join(tdir, tid + ext)
+
+            # Two reference conventions exist: one shared _reference_good per
+            # environment, and one per task named <task>_reference. Assuming the
+            # first made three sound video tasks look broken, which is the page
+            # telling a lie in the direction that costs a day.
+            ref = next((c for c in (
+                os.path.join(tdir, spec["reference"]) if spec.get("reference") else "",
+                os.path.join(tdir, f"{tid}_reference{ext}"),
+                os.path.join(tdir, "_reference_good" + ext),
+            ) if c and os.path.exists(c)), "")
 
             on_broken = grade(env, tpath, broken)
             on_good = grade(env, tpath, ref) if os.path.exists(ref) else \
@@ -375,14 +424,25 @@ def main():
             h.append("</div></details>")
             body.append("".join(h))
 
+    body.append('<div class="later"><h3>Not built yet</h3>'
+                '<p class="i">A bench showing only finished work looks complete and '
+                'tells you nothing about the shape of the job. These are the faults '
+                'with a buyer and no environment.</p>')
+    for name, why in PLANNED:
+        body.append(f'<div class="row"><b>{esc(name)}</b><span>{esc(why)}</span></div>')
+    body.append('</div>')
+
     total = counts[0] + counts[1]
     bad = " bad" if counts[1] else ""
     verdict = ("Every check is working." if not counts[1]
                else f"{counts[1]} of {total} need looking at.")
-    head = ["<h1>Do the checks work?</h1>",
+    head = ["<h1>Touchstone</h1>",
             f'<p class="score"><span class="n{bad}">{counts[0]}</span>'
             f'<span style="color:var(--dim)"> of {total}</span>'
             f"<small>{esc(verdict)}</small></p>",
+            '<p class="sub">A touchstone is the stone you streak a metal against to test its '
+            'purity against a known standard. This is the same move on the checkers. Everything '
+            'that grades a creative file belongs on this page before it is sent anywhere.</p>',
             '<p class="sub">Each fault below was put into a file on purpose. The checker has to '
             'do two things and it has to do both. Notice the mistake, and say what it is in words '
             'a compositor would recognise. And leave correct work alone, because a checker that '
@@ -397,9 +457,9 @@ def main():
 
     html = (f"<!doctype html><html lang=en><head><meta charset=utf-8>"
             f"<meta name=viewport content='width=device-width, initial-scale=1'>"
-            f"<title>Do the checks work</title><style>{CSS}</style></head><body>"
+            f"<title>Touchstone</title><style>{CSS}</style></head><body>"
             f'<div class="wrap">{"".join(head)}{"".join(body)}'
-            f"<footer>Alabo creative envs &nbsp;·&nbsp; grader review</footer>"
+            f"<footer>Touchstone &nbsp;·&nbsp; proving the checkers before they leave</footer>"
             f"</div></body></html>")
     open(a.out, "w", encoding="utf-8").write(html)
     print(f"{a.out}  {counts[0]} sound, {counts[1]} flagged")
