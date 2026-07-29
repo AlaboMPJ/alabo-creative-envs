@@ -1,0 +1,66 @@
+[
+  {
+    "id": "read_colorspace_wrong",
+    "title": "A Read node told the wrong colourspace for its file",
+    "symptom": "The plate looks flat and slightly milky next to the reference. Everyone assumes it is the grade. Nothing errors.",
+    "errors": "No. The file loads, the comp renders, the shot delivers.",
+    "check": "Parse the Read node's file extension and its colorspace knob. A linear EXR read as sRGB, or a log DPX read as linear, is a mismatch that is decidable from the two values alone with no image needed.",
+    "skill": "Know that a Read node's colorspace is a declaration about the file rather than a look, and that getting it wrong is invisible until it is composited against something correct."
+  },
+  {
+    "id": "merge_inputs_swapped",
+    "title": "A Merge with A and B the wrong way round",
+    "symptom": "The element sits behind the plate instead of over it. In a dark shot nobody notices for two days.",
+    "errors": "No. Merge accepts either order and renders happily.",
+    "check": "Follow the graph: the input carrying the alpha-bearing element should be A and the background should be B for an over. Decidable from which upstream branch contains the element chain.",
+    "skill": "Know which input is which on a Merge, and that over is not commutative."
+  },
+  {
+    "id": "missing_unpremult",
+    "title": "A colour correction on premultiplied pixels with no unpremult around it",
+    "symptom": "Edges go dark and crunchy over the background. The artist paints them out by hand rather than finding the cause.",
+    "errors": "No.",
+    "check": "Walk the chain: a Grade or ColorCorrect fed by premultiplied output with no Unpremult before and Premult after, and no (un)premult knob set on the node itself.",
+    "skill": "Know that colour maths on associated alpha darkens every semi-transparent pixel, and that the fix is structural rather than a paint fix."
+  },
+  {
+    "id": "zdefocus_normalised_depth",
+    "title": "A ZDefocus reading a depth channel that was normalised to 0 and 1",
+    "symptom": "The defocus looks flat and the focal plane will not sit where the artist puts it, whatever they type.",
+    "errors": "No. It renders.",
+    "check": "The depth input's range against the ZDefocus focal-plane and depth-of-field values. A 0-to-1 depth with a focal plane set in scene units cannot ever be right.",
+    "skill": "Know that depth must be in scene units for any depth-driven node, and that a normalised pass silently breaks every one of them."
+  },
+  {
+    "id": "reformat_before_filter",
+    "title": "A Reformat sitting before the filter rather than after it",
+    "symptom": "The result is soft, or aliases on high-contrast edges. Reads as a bad plate.",
+    "errors": "No.",
+    "check": "Node order along the chain: a Reformat that reduces resolution upstream of a Blur, Defocus or Transform is throwing away the samples the filter needed.",
+    "skill": "Know that filtering after a downres is filtering data that no longer exists."
+  },
+  {
+    "id": "write_int_deliverable",
+    "title": "A Write set to 8 or 16 bit integer on a comp handoff",
+    "symptom": "The next department finds banding in the gradients and no headroom in the highlights. The file opens fine.",
+    "errors": "No. It writes and it validates.",
+    "check": "The Write node's file_type and datatype knobs against what the task states the deliverable is. A comp handoff to grade or to another vendor is float.",
+    "skill": "Know what a downstream department needs out of a handoff, and that a valid file is not the same as a correct one."
+  },
+  {
+    "id": "disabled_node_in_chain",
+    "title": "A node in the critical path that is disabled rather than deleted",
+    "symptom": "The control does nothing. The artist drags its sliders for an hour before anybody checks whether it is live.",
+    "errors": "No.",
+    "check": "Any node with disable set to 1 that sits on the path between the plate and the Write. A disabled node still looks live in the graph.",
+    "skill": "Know to delete a dead branch rather than switch it off, because a disabled node reads as a working control."
+  },
+  {
+    "id": "frame_range_mismatch",
+    "title": "A script frame range that does not match the plate",
+    "symptom": "The last few frames repeat, or the shot is one frame short at the head. Only spotted on review.",
+    "errors": "No. It renders every frame it is asked for.",
+    "check": "The root first_frame and last_frame against the Read node's frame range and its on-error and before/after knobs, which decide whether the shortfall holds or loops.",
+    "skill": "Know that a Read will happily invent frames outside its range, and which knob decides what it invents."
+  }
+]
