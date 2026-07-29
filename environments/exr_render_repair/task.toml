@@ -1,0 +1,57 @@
+[environment]
+id = "exr_render_repair"
+version = "0.1.0"
+application = "OpenEXR"
+licence_required = false
+author = "Alabo"
+
+[reward]
+type = "binary"
+pass = 1.0
+fail = 0.0
+# No partial credit. A handoff is either correct for the comp downstream or it
+# is not, and "mostly right depth" is the fault this environment exists to catch.
+
+[grading]
+entrypoint = "tests/test.sh"
+grader = "tests/grader.py"
+# Every check is numeric. There is no structural level here, because the header
+# is not the problem: every one of these files is a valid EXR that opens, reads
+# and delivers. A reference comparison runs alongside the craft checks so a
+# submission cannot satisfy the rules by destroying the data.
+reference = "tasks/_reference_good.exr"
+
+[agent]
+reads = ["task_instance.json", "broken.exr"]
+writes = ["submission.exr"]
+max_turns = 25
+
+[[tasks]]
+id = "aov_naming"
+file = "tasks/aov_naming.json"
+difficulty = "easy"
+skill = "know the standard AOV names a conform template looks up, and that a rename breaks it silently"
+
+[[tasks]]
+id = "eight_bit_upconvert"
+file = "tasks/eight_bit_upconvert.json"
+difficulty = "easy"
+skill = "recognise a float file carrying only 8-bit information, which the header will never tell you"
+
+[[tasks]]
+id = "normals_not_unit"
+file = "tasks/normals_not_unit.json"
+difficulty = "medium"
+skill = "know that normals must be unit length or relighting is wrong everywhere and nowhere in particular"
+
+[[tasks]]
+id = "alpha_double_premult"
+file = "tasks/alpha_double_premult.json"
+difficulty = "medium"
+skill = "know that EXR alpha is associated, and that a second multiply darkens every edge with no error"
+
+[[tasks]]
+id = "depth_normalised"
+file = "tasks/depth_normalised.json"
+difficulty = "hard"
+skill = "restore scene-unit depth from a 0-1 normalisation using the stated camera near and far, rather than rescaling to clear a range check"

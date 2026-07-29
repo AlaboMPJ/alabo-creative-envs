@@ -66,6 +66,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--submission", default="/env/submission.exr")
     ap.add_argument("--task", default="/env/task_instance.json")
+    ap.add_argument("--env-dir", default="/env",
+                    help="root the reference is resolved against when the task "
+                         "instance is mounted outside tasks/")
     a = ap.parse_args()
 
     spec = json.load(open(a.task))
@@ -168,8 +171,26 @@ def main():
     # repair was not supposed to change.
     ref_path = spec.get("reference")
     if ref_path:
-        ref_full = os.path.join(os.path.dirname(a.task), ref_path)
-        if os.path.exists(ref_full):
+        # The task instance is mounted at the environment root by the runner and
+        # lives in tasks/ during development, so look in both. A missing
+        # reference used to skip this whole block in silence, which handed a 1.0
+        # to every attack it exists to catch: the environment committing the
+        # exact fault it grades. A stated reference that cannot be found is now
+        # an environment error rather than a pass.
+        candidates = [
+            os.path.join(os.path.dirname(os.path.abspath(a.task)), ref_path),
+            os.path.join(a.env_dir, "tasks", os.path.basename(ref_path)),
+            os.path.join(a.env_dir, os.path.basename(ref_path)),
+        ]
+        ref_full = next((p for p in candidates if os.path.exists(p)), None)
+        if ref_full is None:
+            print(json.dumps({
+                "reward": 0.0,
+                "reason": f"environment error: task names reference '{ref_path}' "
+                          f"and it is not present. Looked in: {candidates}",
+            }), file=sys.stderr)
+            sys.exit(2)
+        if ref_full:
             ref = read(ref_full)
             changed = set(spec.get("may_change", []))
             for name, arr in ref.items():
