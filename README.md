@@ -104,8 +104,13 @@ image, because a correct repair can legitimately produce different pixels.
 ## Run
 
     cd environments/comfyui_graph_repair
-    docker build -t comfyui-graph-repair environment/
+    docker build -t comfyui-graph-repair -f environment/Dockerfile .
     docker run --rm -v "$PWD:/env" comfyui-graph-repair /env/tests/test.sh
+
+The build context is the ENVIRONMENT directory and the Dockerfile is passed with
+-f. Every Dockerfile here copies `tests/`, `tasks/`, `instruction.md` and
+`task.toml`, and none of those live inside `environment/`, so building with
+`environment/` as the context fails on the first COPY.
 
 ## Provenance
 
