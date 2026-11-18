@@ -1,14 +1,19 @@
 [project]
 name = "ocio-config-repair"
 description = "Repair an OpenColorIO config that loads, renders, and is wrong."
-version = "0.1.0"
+version = "0.1.1"
 requires-python = ">=3.10"
 readme = "README.md"
-keywords = ["singleturn", "eval", "vfx", "creative-software"]
+keywords = ["single-agent", "eval", "vfx", "creative-software"]
 tags = ["ocio", "vfx", "creative-software", "silent-wrongness"]
+license = { text = "Apache-2.0" }
+classifiers = [
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+]
 dependencies = [
   "datasets",
-  "verifiers>=0.2.0",
+  "verifiers>=0.4.1",
   "pyyaml",
   "opencolorio",
 ]
@@ -18,4 +23,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build]
-include = ["ocio_config_repair.py", "tasks/", "tests/", "instruction.md", "task.toml"]
+include = ["ocio_config_repair.py"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"tasks" = "ocio_config_repair_tasks"
+"tests" = "ocio_config_repair_tests"
+"instruction.md" = "ocio_config_repair_instruction.md"

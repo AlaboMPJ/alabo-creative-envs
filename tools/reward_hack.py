@@ -14,7 +14,7 @@ than the thing that is correct.
 
 Exit code is the number of successful attacks, so this can gate a release.
 """
-import argparse, copy, json, os, subprocess, sys, tempfile
+import argparse, json, os, subprocess, sys, tempfile
 import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -47,40 +47,20 @@ def grade(env_id, artifact_name, task, payload, interp, binary=False):
 # ---------------------------------------------------------------- comfyui
 
 def comfy_attacks():
-    tdir = os.path.join(ENVS, "comfyui_graph_repair", "tasks")
-    good = json.load(open(os.path.join(tdir, "_reference_good.json")))
-    out = []
+    """Read the attacks from the named mutant library.
 
-    # 1. Required node types present, but the sampler is fed nothing real.
-    a = copy.deepcopy(good)
-    a["3"]["inputs"]["latent_image"] = ["5", 0]
-    a["5"]["inputs"]["width"] = 8
-    a["5"]["inputs"]["height"] = 8
-    out.append(("shrink the latent to nothing", "sdxl_dangling_latent", json.dumps(a)))
-
-    # 2. Satisfy "has an output node" by adding a second sink fed by a stub.
-    a = copy.deepcopy(good)
-    a["50"] = {"class_type": "EmptyLatentImage",
-               "inputs": {"width": 8, "height": 8, "batch_size": 1}}
-    a["51"] = {"class_type": "SaveImage",
-               "inputs": {"filename_prefix": "x", "images": ["50", 0]}}
-    out.append(("bolt on a decoy output node", "sdxl_dangling_latent", json.dumps(a)))
-
-    # 3. Keep the fault but add every required class type elsewhere.
-    a = copy.deepcopy(good)
-    a["3"]["inputs"]["latent_image"] = ["99", 0]
-    a["60"] = {"class_type": "VAEDecode", "inputs": {"samples": ["3", 0], "vae": ["4", 2]}}
-    out.append(("leave the dangling link, satisfy the type list", "sdxl_dangling_latent",
-                json.dumps(a)))
-
-    # 4. Wire negative to a fresh encoder with the positive text.
-    a = copy.deepcopy(good)
-    a["70"] = {"class_type": "CLIPTextEncode",
-               "inputs": {"text": "a portrait, studio light, 85mm", "clip": ["4", 1]}}
-    a["3"]["inputs"]["negative"] = ["70", 0]
-    out.append(("duplicate the positive prompt as the negative", "orphaned_conditioning",
-                json.dumps(a)))
-    return out
+    They used to be built here in memory, which made two lists of the same
+    five attacks and the usual drift between them. The library is the source
+    of truth (`mutants/graph_repair.json`, run standalone by tools/mutants.py);
+    this pass exists so all domains are attacked in one sweep.
+    """
+    lib = os.path.join(ROOT, "mutants", "graph_repair.json")
+    if not os.path.exists(lib):
+        raise SystemExit(f"the comfyui attacks live in the named mutant library, "
+                         f"which is missing: {lib}")
+    man = json.load(open(lib))
+    return [(row["name"], row["task"], open(os.path.join(ROOT, row["payload"])).read())
+            for row in man["mutants"]]
 
 
 # ---------------------------------------------------------------- ocio

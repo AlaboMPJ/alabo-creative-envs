@@ -91,23 +91,5 @@
   "required_class_types": [
     "CLIPTextEncode",
     "KSampler"
-  ],
-  "required_input_values": [
-    [
-      "3",
-      "negative",
-      [
-        "7",
-        0
-      ]
-    ],
-    [
-      "3",
-      "positive",
-      [
-        "6",
-        0
-      ]
-    ]
   ]
 }

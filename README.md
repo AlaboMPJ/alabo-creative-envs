@@ -11,6 +11,8 @@ artist looking at it.
 This repo builds the missing half. Each environment ships a container, a task,
 and a grader that returns a binary reward without a human in the loop.
 
+![17 tasks, every reference 1.0, every planted fault 0.0](docs/verification-card.png)
+
 ## Why these are hard to author
 
 Not because the harness is hard. Because writing the grader requires knowing
@@ -86,6 +88,22 @@ a distinct-value count. A second save node fed by a stub cleared "has an output"
 All twelve now hold, and the exit code is the breach count so it can gate a
 release.
 
+The graph-repair attacks live in a NAMED library per domain rather than in the
+runner, because every gate in the estate already carries planted known-bads and
+the list is the reusable half:
+
+    python3 tools/mutants.py --domain graph_repair
+    python3 tools/mutants.py --list
+    python3 tools/mutants.py --selftest
+
+`mutants/graph_repair.json` holds five mutants, each with a name, the lazy path
+it takes, and the check it must be refused by. The runner judges both
+directions: the reference must score 1.0 or the grader is hostile, and every
+mutant must score 0.0 with a reason naming the declared check, so a refusal is
+earned rather than incidental. `tools/reward_hack.py` reads the same files, so
+the two passes cannot drift. The selftest validates the runner itself, including
+that an accepted mutant IS reported.
+
 One attack also exposed a flaw in the task design rather than the grader:
 normalising depth destroys the original range, so no agent could have recovered
 scene units. The task now states the camera near and far, which makes it
@@ -111,6 +129,37 @@ The build context is the ENVIRONMENT directory and the Dockerfile is passed with
 -f. Every Dockerfile here copies `tests/`, `tasks/`, `instruction.md` and
 `task.toml`, and none of those live inside `environment/`, so building with
 `environment/` as the context fails on the first COPY.
+
+On a machine with no container runtime, `tools/cleanroom.sh` runs the same
+entrypoint in a clean mount and network namespace, with only the environment
+directory visible and no site packages:
+
+    tools/cleanroom.sh environments/comfyui_graph_repair \
+        environments/comfyui_graph_repair/tasks/_reference_good.json \
+        environments/comfyui_graph_repair/tasks/sdxl_dangling_latent.json
+
+It is not a substitute for the image build on a machine that has Docker. On
+2026-09-22 it caught a packaging bug the local runs could not: the grader
+resolved the known-good reference beside the TASK file, and a runner copies
+`task_instance.json` into a scratch directory, so inside the sandbox the
+reference was out of reach and every intent check silently skipped.
+
+## Trajectories
+
+`ala-traj` logs an agent's trajectory through an environment and audits it
+against the reference repair: the prompt, the raw reply, the submitted graph,
+the exact edits from the broken graph, the grader's verdict, the agent's stated
+confidence, and an audit verdict (optimal, sufficient, wasteful, stuck). It runs
+a local model over the ollama HTTP API with no SDK, and it accepts external
+submissions with `ala-traj log --from submission.json`, so any harness can feed
+the same corpus.
+
+    ala-traj run --task sdxl_dangling_latent --model qwen2.5-coder:14b --seed 1
+    ala-traj audit --dir trajectories/comfyui_graph_repair
+    ala-traj mine  --dir trajectories/comfyui_graph_repair
+
+The first ten trajectories, and the audit of them, are in
+`environments/comfyui_graph_repair/AUDIT.md`.
 
 ## Provenance
 
@@ -144,3 +193,29 @@ the inverted-transform task because that fault is structurally invisible. A
 reward function that quietly degrades will train a model on a broken config.
 Tasks that require numeric grading now exit with an environment error instead,
 and the adapter raises rather than returning zero.
+
+## Verification, 2026-11-19
+
+The packages were executed against `verifiers==0.4.1` in an isolated venv, installed from the
+built package rather than run from the source directory, so the test also proves `tasks/` and
+`tests/` are packaged.
+
+    env            SingleAgentEnv (verifiers v1)
+    taskset        comfyui_graph_repair
+    tasks          4: feedback_cycle, missing_vae_decode, orphaned_conditioning, sdxl_dangling_latent
+    good graph     1.0 on every task
+    planted fault  0.0 on every task, each with its own reason
+
+The four faults are a dangling latent link, a missing VAEDecode upstream of the save node, a cycle
+the executor deadlocks on, and a negative prompt wired to the same conditioning as the positive.
+
+The previous entrypoint used `vf.SingleTurnEnv` and `vf.Rubric`, which no longer exist in verifiers
+0.4.1: `load_environment()` fails with `AttributeError: module 'verifiers' has no attribute
+'SingleTurnEnv'`. The v1 rewrite is therefore a requirement rather than a preference.
+
+All four packages were then installed into one venv from their wheels and executed through the v1
+`Task.score` path: 17 task instances, 1.0 on every good reference and 0.0 on every planted fault
+(comfyui 4, OCIO 5, EXR 5, video 3). The run found and fixed two packaging faults: binary artefacts
+had no path through the reward, and four packages installed together merged their top-level
+`tasks/` and `tests/` directories, so each module read all four task sets. Data now ships as
+`<env_id>_tasks`, `<env_id>_tests` and `<env_id>_instruction.md`.

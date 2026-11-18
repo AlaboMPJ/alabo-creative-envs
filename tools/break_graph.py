@@ -5,6 +5,16 @@ Every task therefore has a known-good solution and the break is reproducible
 from its name, which is what lets the grader assert requirements rather than
 guess. Authored from a working graph; nothing scraped.
 
+Requirements are NOT emitted as id-pinned input values any more. Pinning
+`["5","width",832]` is refused the moment a repair renumbers the graph with
+every reference updated, which the instruction permits and which is a
+legitimate repair, so the pin was accusing correct work. The grader now checks
+author intent ID-AGNOSTICALLY against the reference: every author literal must
+survive somewhere on a node of its class, every author link must survive as a
+link between the same classes, and the two conditionings must stay two. That
+refuses the lazy rebuild (which loses the author's values and wires) without
+refusing a rebuilt node with a fresh id. Specimens in `mutants/`.
+
     python3 tools/break_graph.py --out environments/comfyui_graph_repair/tasks
 """
 import json, os, copy, argparse
@@ -65,20 +75,13 @@ def orphaned_conditioning(g):
 
 BREAKS = {
     "sdxl_dangling_latent": (sdxl_dangling_latent, {
-        "required_class_types": ["KSampler", "VAEDecode", "SaveImage", "EmptyLatentImage"],
-        "required_input_values": [["5", "width", 832], ["5", "height", 1216],
-                                  ["3", "steps", 30], ["3", "seed", 42]]}),
+        "required_class_types": ["KSampler", "VAEDecode", "SaveImage", "EmptyLatentImage"]}),
     "missing_vae_decode": (missing_vae_decode, {
-        "required_class_types": ["VAEDecode", "SaveImage"],
-        "required_input_values": [["3", "steps", 30]]}),
+        "required_class_types": ["VAEDecode", "SaveImage"]}),
     "feedback_cycle": (feedback_cycle, {
-        "required_class_types": ["KSampler", "VAEDecode", "SaveImage"],
-        "required_input_values": [["5", "width", 832]]}),
+        "required_class_types": ["KSampler", "VAEDecode", "SaveImage"]}),
     "orphaned_conditioning": (orphaned_conditioning, {
-        "required_class_types": ["CLIPTextEncode", "KSampler"],
-        # the fix is to point negative back at node 7, so assert the wiring
-        "required_input_values": [["3", "negative", ["7", 0]],
-                                  ["3", "positive", ["6", 0]]]}),
+        "required_class_types": ["CLIPTextEncode", "KSampler"]}),
 }
 
 
@@ -95,7 +98,6 @@ def main():
             "broken_graph": broken,
             "error": err,
             "required_class_types": spec["required_class_types"],
-            "required_input_values": spec["required_input_values"],
         }
         p = os.path.join(a.out, f"{name}.json")
         with open(p, "w") as f:

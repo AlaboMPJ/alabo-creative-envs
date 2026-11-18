@@ -5,6 +5,16 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+
+# Prime CLI push metadata, per environment. Names, ids and hashes only, no
+# secrets, but it is local state rather than source and does not belong in a
+# public tree.
+.prime/
+
+# Adversarial runs of the graders: generated clips and candidate repairs.
+# Local evidence, reproducible from tools/, not published.
+.hack_tmp/
+.solve_tmp/
 review.html
 judgement.local.json
 judge.html

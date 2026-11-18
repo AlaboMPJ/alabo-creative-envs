@@ -78,12 +78,5 @@
   "required_class_types": [
     "VAEDecode",
     "SaveImage"
-  ],
-  "required_input_values": [
-    [
-      "3",
-      "steps",
-      30
-    ]
   ]
 }

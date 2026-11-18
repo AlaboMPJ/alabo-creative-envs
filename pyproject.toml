@@ -6,6 +6,11 @@ readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Alabo" }]
 keywords = ["rl-environment", "verifiers", "vfx", "compositing", "comfyui", "opencolorio", "openexr"]
+license = { text = "Apache-2.0" }
+classifiers = [
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+]
 dependencies = ["verifiers>=0.2.0", "datasets"]
 
 [project.optional-dependencies]
